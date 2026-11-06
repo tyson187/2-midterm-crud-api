@@ -1,64 +1,57 @@
-import 'reflect-metadata';  // MUST be first import!
+import 'reflect-metadata';
 import express from 'express';
 import cors from 'cors';
+import * as dotenv from 'dotenv';
 import { AppDataSource } from './config/data-source';
 import { userRoutes } from './routes/userRoutes';
-import * as dotenv from 'dotenv';
 import { taskRoutes } from './routes/taskRoutes';
-
 
 dotenv.config();
 
-
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT ?? 3000);
 
-
-// Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({
+app.get('/health', (_req, res) => {
+    res.status(200).json({
         success: true,
         message: 'API is running',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
     });
 });
 
-
-// Routes
-app.use('/api', taskRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api', taskRoutes);
 
-
-// 404 handler
 app.use((req, res) => {
     res.status(404).json({
         success: false,
         error: {
             code: 'ROUTE_NOT_FOUND',
-            message: `Route ${req.method} ${req.url} not found`
-        }
+            message: `Route ${req.method} ${req.originalUrl} not found`,
+        },
     });
 });
 
-
-// Initialize database connection
-AppDataSource.initialize()
-    .then(() => {
+async function startServer() {
+    try {
+        await AppDataSource.initialize();
         console.log('✅ Database connected successfully!');
 
-        // Routes
-        app.use('/api/users', userRoutes);
-
-        // Start server
         app.listen(PORT, () => {
             console.log(`🚀 Server running on http://localhost:${PORT}`);
         });
-    })
-    .catch((error) => {
+    } catch (error) {
         console.error('❌ Database connection failed:', error);
-    });
+        process.exit(1);
+    }
+}
+
+startServer();
+
+export { app };
+
+
