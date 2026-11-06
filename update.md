@@ -1,0 +1,2 @@
+CLARRENCE C GOMOLON BSIT 3rd Yr
+Midterm Hands on
