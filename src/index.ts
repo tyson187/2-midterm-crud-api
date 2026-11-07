@@ -5,6 +5,8 @@ import * as dotenv from 'dotenv';
 import { AppDataSource } from './config/data-source';
 import { userRoutes } from './routes/userRoutes';
 import { taskRoutes } from './routes/taskRoutes';
+import { authRoutes } from './routes/authRoutes';
+import { requestLogger } from './middleware/requestLogger';
 
 dotenv.config();
 
@@ -14,6 +16,7 @@ const PORT = Number(process.env.PORT ?? 3000);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(requestLogger);
 
 app.get('/health', (_req, res) => {
     res.status(200).json({
@@ -23,6 +26,7 @@ app.get('/health', (_req, res) => {
     });
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', taskRoutes);
 
